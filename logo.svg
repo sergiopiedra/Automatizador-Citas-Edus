@@ -1,36 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1D4ED8"/>
-      <stop offset="1" stop-color="#1E3A8A"/>
-    </linearGradient>
-    <linearGradient id="head" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#F43F5E"/>
-      <stop offset="1" stop-color="#E11D48"/>
-    </linearGradient>
-    <clipPath id="cal">
-      <rect x="104" y="128" width="304" height="272" rx="40"/>
-    </clipPath>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0B1B4D" flood-opacity="0.45"/>
-    </filter>
-  </defs>
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1D4ED8"/>
+            <stop offset="1" stop-color="#1E3A8A"/>
+        </linearGradient>
+        <linearGradient id="head" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F43F5E"/>
+            <stop offset="1" stop-color="#E11D48"/>
+        </linearGradient>
+        <clipPath id="cal">
+            <rect x="104" y="128" width="304" height="272" rx="40"/>
+        </clipPath>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0B1B4D" flood-opacity="0.45"/>
+        </filter>
+    </defs>
 
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+    <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- Calendar -->
-  <g filter="url(#shadow)">
-    <rect x="104" y="128" width="304" height="272" rx="40" fill="#FFFFFF"/>
-    <rect x="104" y="128" width="304" height="72" fill="url(#head)" clip-path="url(#cal)"/>
-  </g>
-  <rect x="166" y="100" width="28" height="64" rx="14" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="8"/>
-  <rect x="318" y="100" width="28" height="64" rx="14" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="8"/>
+    <!-- Calendar -->
+    <g filter="url(#shadow)">
+        <rect x="104" y="128" width="304" height="272" rx="40" fill="#FFFFFF"/>
+        <rect x="104" y="128" width="304" height="72" fill="url(#head)" clip-path="url(#cal)"/>
+    </g>
+    <rect x="166" y="100" width="28" height="64" rx="14" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="8"/>
+    <rect x="318" y="100" width="28" height="64" rx="14" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="8"/>
 
-  <!-- Medical cross -->
-  <path d="M236 224h40a8 8 0 0 1 8 8v36h36a8 8 0 0 1 8 8v40a8 8 0 0 1-8 8h-36v36a8 8 0 0 1-8 8h-40a8 8 0 0 1-8-8v-36h-36a8 8 0 0 1-8-8v-40a8 8 0 0 1 8-8h36v-36a8 8 0 0 1 8-8z"
-        fill="#E11D48"/>
+    <!-- Medical cross -->
+    <path d="M236 224h40a8 8 0 0 1 8 8v36h36a8 8 0 0 1 8 8v40a8 8 0 0 1-8 8h-36v36a8 8 0 0 1-8 8h-40a8 8 0 0 1-8-8v-36h-36a8 8 0 0 1-8-8v-40a8 8 0 0 1 8-8h36v-36a8 8 0 0 1 8-8z" fill="#E11D48"/>
 
-  <!-- Confirmed badge -->
-  <circle cx="392" cy="392" r="64" fill="#22C55E" stroke="#FFFFFF" stroke-width="14"/>
-  <path d="M362 393l20 20 38-40" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Confirmed badge -->
+    <circle cx="392" cy="392" r="64" fill="#22C55E" stroke="#FFFFFF" stroke-width="14"/>
+    <path d="M362 393l20 20 38-40" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -43,6 +43,16 @@ Para quienes madrugan a las 5 de la mañana, refrescan la página hasta el cansa
 
 Necesitas **macOS**, **Python 3.11+** y una cuenta de **EDUS Citas Web**.
 
+### Opción 1: con GitHub Copilot (recomendado)
+
+1. Clona el repo y ábrelo en **VS Code** con GitHub Copilot.
+2. En el chat escribe **`/configurar-edus`** (o elige el agente **EDUS Citas**).
+3. El agente instala todo, te pide la cédula, te indica escribir la clave **en la terminal** (nunca en el chat), te pregunta intervalo y especialidad, y arranca la búsqueda.
+
+También le puedes pedir en el chat cosas como "detén la búsqueda", "cámbialo a cada minuto" o "por qué no encuentra citas".
+
+### Opción 2: manual
+
 ```bash
 git clone https://github.com/sergiopiedra/Automatizador-Citas-Edus.git
 cd Automatizador-Citas-Edus
@@ -68,15 +78,16 @@ Cuando suene la alarma, escribe el código de seguridad que aparece en pantalla.
 .venv/bin/python edus_local.py --observar --ver   # ver el flujo sin reservar
 ```
 
-| Opción              | Qué hace                                                       | Default             |
-| ------------------- | -------------------------------------------------------------- | ------------------- |
-| `--setup`           | Guarda o cambia cédula y clave en el Llavero                   |                     |
-| `--intervalo N`     | Segundos entre revisiones                                      | `120`               |
-| `--servicio X`      | Código de servicio                                             | `1` (Medicina)      |
-| `--especialidad X`  | Código de especialidad                                         | `1033` (Med. General) |
-| `--excluir F1,F2`   | Fechas a ignorar (`DD/MM/AAAA`)                                | ninguna             |
-| `--ver`             | Muestra la ventana de Chromium (no hagas clic en ella)         | oculta              |
-| `--observar`        | Abre el cupo y guarda captura de la confirmación, sin reservar | apagado             |
+| Opción             | Qué hace                                                       | Default               |
+| ------------------ | -------------------------------------------------------------- | --------------------- |
+| `--setup`          | Guarda o cambia cédula y clave en el Llavero                   |                       |
+| `--cedula X`       | Cédula para `--setup` (la clave siempre se pide oculta)        |                       |
+| `--intervalo N`    | Segundos entre revisiones                                      | `120`                 |
+| `--servicio X`     | Código de servicio                                             | `1` (Medicina)        |
+| `--especialidad X` | Código de especialidad                                         | `1033` (Med. General) |
+| `--excluir F1,F2`  | Fechas a ignorar (`DD/MM/AAAA`)                                | ninguna               |
+| `--ver`            | Muestra la ventana de Chromium (no hagas clic en ella)         | oculta                |
+| `--observar`       | Abre el cupo y guarda captura de la confirmación, sin reservar | apagado               |
 
 Detener: `Ctrl+C` en la terminal. Al salir intenta cerrar la sesión de EDUS.
 
@@ -101,13 +112,13 @@ flowchart TD
 
 ## Avisos
 
-| Situación                                  | Qué pasa                                                    |
-| ------------------------------------------ | ----------------------------------------------------------- |
-| EDUS pide el código de seguridad           | Alarma + ventana con la imagen (hasta ~2 min)              |
-| Cita reservada                             | Notificación + alarma hasta que cierres la alerta; se detiene |
-| Ya tienes una cita en los próximos 3 días  | Alarma + alerta; se detiene (EDUS no permite otra)         |
-| Clave incorrecta                           | Alarma + alerta; se detiene para no bloquear la cuenta      |
-| No pudo confirmar el resultado             | Alarma + alerta para que revises EDUS; se detiene          |
+| Situación                                 | Qué pasa                                                      |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| EDUS pide el código de seguridad          | Alarma + ventana con la imagen (hasta ~2 min)                 |
+| Cita reservada                            | Notificación + alarma hasta que cierres la alerta; se detiene |
+| Ya tienes una cita en los próximos 3 días | Alarma + alerta; se detiene (EDUS no permite otra)            |
+| Clave incorrecta                          | Alarma + alerta; se detiene para no bloquear la cuenta        |
+| No pudo confirmar el resultado            | Alarma + alerta para que revises EDUS; se detiene             |
 
 La alarma sube el volumen al 100 % mientras suena y luego lo devuelve a como estaba.
 
@@ -122,19 +133,22 @@ Para borrar tus datos: `security delete-generic-password -s edus-citas` (dos vec
 
 ## Problemas comunes
 
-| Síntoma                                         | Solución                                                                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------ |
-| "Ya existe un usuario logueado en este equipo"  | El script cierra la sesión anterior solo; si entras a EDUS a mano, detén el script primero |
-| "El Código de Seguridad es inválido"            | Vuelve a escribirlo; el script reintenta hasta 5 veces                   |
-| La ventana del código aparece cada 2 minutos    | Nadie la respondió; mientras no la respondas, no revisa cupos             |
-| Dejó de revisar al cerrar la tapa               | macOS se durmió; deja la tapa abierta                                    |
+| Síntoma                                        | Solución                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| "Ya existe un usuario logueado en este equipo" | El script cierra la sesión anterior solo; si entras a EDUS a mano, detén el script primero |
+| "El Código de Seguridad es inválido"           | Vuelve a escribirlo; el script reintenta hasta 5 veces                                     |
+| La ventana del código aparece cada 2 minutos   | Nadie la respondió; mientras no la respondas, no revisa cupos                              |
+| Dejó de revisar al cerrar la tapa              | macOS se durmió; deja la tapa abierta                                                      |
 
 ## Estructura
 
 ```
-edus_local.py      Buscador y reservador
-requirements.txt   playwright, pillow, keyring
-logo.svg           Logo (logo.png: versión 512 px)
+edus_local.py                            Buscador y reservador
+requirements.txt                         playwright, pillow, keyring
+.github/agents/edus-citas.agent.md       Agente de Copilot para instalar, configurar y operar
+.github/prompts/configurar-edus.prompt.md  Comando /configurar-edus
+.github/copilot-instructions.md          Contexto del proyecto para Copilot
+logo.svg                                 Logo (logo.png: versión 512 px)
 ```
 
 ## Aviso

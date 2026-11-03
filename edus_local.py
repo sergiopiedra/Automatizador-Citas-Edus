@@ -122,8 +122,8 @@ def pedir_captcha(img: Path) -> str:
 
 # ── Credentials ───────────────────────────────────────────────
 
-def setup() -> None:
-    cedula = input("Cédula (9 dígitos): ").strip()
+def setup(cedula: str = "") -> None:
+    cedula = cedula.strip() or input("Cédula (9 dígitos): ").strip()
     if not (cedula.isdigit() and len(cedula) == 9):
         sys.exit("La cédula debe tener 9 dígitos.")
     clave = getpass.getpass("Clave de EDUS (no se muestra): ")
@@ -473,6 +473,7 @@ def vigilar(browser, cedula: str, clave: str, args) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Busca y reserva citas EDUS desde tu Mac.")
     parser.add_argument("--setup", action="store_true", help="guardar cédula y clave en el Llavero")
+    parser.add_argument("--cedula", default="", help="cédula para --setup (la clave siempre se pide oculta)")
     parser.add_argument("--intervalo", type=int, default=120, help="segundos entre revisiones (default 120)")
     parser.add_argument("--servicio", default="1", help="1 = Medicina")
     parser.add_argument("--especialidad", default="1033", help="1033 = Medicina General")
@@ -483,7 +484,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.setup:
-        setup()
+        setup(args.cedula)
         return
 
     cedula, clave = cargar_credenciales()
