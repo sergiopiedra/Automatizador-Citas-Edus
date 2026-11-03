@@ -15,6 +15,7 @@ Usage:
 import argparse
 import getpass
 import os
+import re
 import subprocess
 import sys
 import time
@@ -32,8 +33,9 @@ DATA_DIR = Path.home() / "Library" / "Application Support" / "EdusCitas"
 CAPTCHA_TIMEOUT = 110
 MAX_LOGIN = 5
 
-SUCCESS_WORDS = ("confirmada", "exitosa", "registrada", "agendada", "reservada", "comprobante")
-TAKEN_WORDS = ("asignada a otro", "no se encontraron", "no disponible", "no fue posible", "sin éxito")
+TAKEN_WORDS = ("asignada a otro", "no fue posible", "sin éxito")
+# EDUS refuses a new appointment if you already have one within the next 3 days.
+REFUSED_WORDS = ("próxim", "proxim", "ya tiene", "ya cuenta", "días", "dias")
 CAPTCHA_WORDS = ("captcha", "código", "codigo", "imagen")
 CREDENTIAL_WORDS = ("clave", "contraseña", "credencial", "incorrect")
 
@@ -279,8 +281,8 @@ def leer_cupos(page, servicio: str, especialidad: str) -> list[dict]:
     """)
 
 
-def reservar(page, cupo: dict) -> str:
-    """Returns 'ok', 'tomado' or 'incierto'."""
+def reservar(page, cupo: dict, observar: bool = False) -> str:
+    """Returns 'ok', 'tomado', 'incierto' or 'observado'."""
     clic = page.evaluate("""
         (cupo) => {
             const t = document.getElementById('formSIAC:cuposDisponibles');
@@ -299,30 +301,64 @@ def reservar(page, cupo: dict) -> str:
     if not clic:
         return "tomado"
 
+    if observar:
+        time.sleep(4)
+        marca = f"{datetime.now():%H%M%S}"
+        page.screenshot(path=str(DATA_DIR / f"observar_{marca}.png"), full_page=True)
+        botones = page.evaluate("""
+            () => Array.from(document.querySelectorAll('button, a, input[type=submit], input[type=button]'))
+                .filter(b => b.getClientRects().length && !b.closest('[id^="formChatBot"]'))
+                .map(b => `${b.id} | ${(b.value || b.textContent || '').trim().slice(0, 60)}`
+                          + ` | dialog=${(b.closest('.ui-dialog') || {}).id || ''}`)
+        """)
+        (DATA_DIR / f"observar_{marca}.txt").write_text("\n".join(botones))
+        log(f"Observación guardada: observar_{marca}.png / .txt (no se confirmó)")
+        return "observado"
+
     confirmar = """
         () => {
-            for (const b of document.querySelectorAll('button, a')) {
-                if (b.textContent.trim() === 'Confirmar') { b.click(); return true; }
-            }
+            const d = document.getElementById('formSIAC:dlgCitasAsignar');
+            if (!d || !d.getClientRects().length) return false;
+            const b = Array.from(d.querySelectorAll('button, a'))
+                .find(b => (b.textContent || '').trim().toLowerCase().startsWith('confirmar'));
+            if (b) { b.click(); return true; }
             return false;
         }
     """
+    numero = ""
+    try:
+        texto = page.locator('[id="formSIAC:dlgCitasAsignar"]').inner_text(timeout=10000)
+        m = re.search(r"N°\s*de\s*Cita\s*(\d+)", texto)
+        numero = m.group(1) if m else ""
+    except Exception:
+        pass
     if not esperar(lambda: page.evaluate(confirmar), 10):
+        page.screenshot(path=str(DATA_DIR / "sin_confirmar.png"), full_page=True)
+        log("No apareció el botón 'Confirmar Cita'.")
         return "tomado"
+    log(f"Confirmando cita N° {numero or '?'}")
 
-    resultado = {"v": "incierto"}
+    resultado = {"v": "incierto", "msg": ""}
 
     def _respuesta() -> bool:
-        cuerpo = page.inner_text("body").lower()
-        if any(w in cuerpo for w in SUCCESS_WORDS):
+        if numero and numero in page.evaluate(
+                "() => (document.getElementById('formSIAC:tablaCitas') || {}).innerText || ''"):
             resultado["v"] = "ok"
             return True
-        if any(w in cuerpo for w in TAKEN_WORDS):
+        mensajes = " ".join(leer_errores(page))
+        if any(w in mensajes.lower() for w in TAKEN_WORDS):
             resultado["v"] = "tomado"
+            return True
+        if any(w in mensajes.lower() for w in REFUSED_WORDS):
+            resultado["v"], resultado["msg"] = "rechazado", mensajes
             return True
         return False
 
-    esperar(_respuesta, 15)
+    if not esperar(_respuesta, 15) and numero:
+        page.reload(wait_until="domcontentloaded")
+        esperar(_respuesta, 10)
+    if resultado["v"] == "rechazado":
+        log(f"EDUS rechazó la cita: {resultado['msg']}")
     return resultado["v"]
 
 
@@ -358,13 +394,25 @@ def vigilar(browser, cedula: str, clave: str, args) -> None:
                 cupo = cupos[0]
                 detalle = f"{cupo['fecha']} {cupo['hora']} - {cupo['consultorio']} - {cupo['funcionario']}"
                 log(f"{len(cupos)} cupo(s). Reservando: {detalle}")
-                resultado = reservar(page, cupo)
+                resultado = reservar(page, cupo, args.observar)
+
+                if resultado == "observado":
+                    notificar("EDUS: cupo visto", f"{detalle} (modo observar, no se reservó)")
+                    time.sleep(args.intervalo)
+                    continue
 
                 if resultado == "ok":
                     page.screenshot(path=str(DATA_DIR / "cita_reservada.png"), full_page=True)
                     log(f"CITA RESERVADA: {detalle}")
                     notificar("Cita EDUS reservada", detalle)
                     alerta("Cita EDUS reservada", detalle)
+                    return
+                if resultado == "rechazado":
+                    page.screenshot(path=str(DATA_DIR / "rechazada.png"), full_page=True)
+                    notificar("EDUS no permitió la cita", "Ya tienes una cita en los próximos 3 días.")
+                    alerta("EDUS no permitió la cita",
+                           "EDUS no deja reservar porque ya tienes una cita en los próximos 3 días. "
+                           "Me detuve; vuelve a ejecutarme cuando esa cita haya pasado.")
                     return
                 if resultado == "incierto":
                     # Stop instead of trying another slot: it may already be booked.
@@ -405,6 +453,8 @@ def main() -> None:
     parser.add_argument("--especialidad", default="1033", help="1033 = Medicina General")
     parser.add_argument("--excluir", default="", help="fechas a excluir: DD/MM/AAAA,DD/MM/AAAA")
     parser.add_argument("--ver", action="store_true", help="mostrar el navegador en pantalla")
+    parser.add_argument("--observar", action="store_true",
+                        help="abrir el cupo y registrar la pantalla de confirmación, sin reservar")
     args = parser.parse_args()
 
     if args.setup:
