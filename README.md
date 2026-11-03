@@ -145,6 +145,7 @@ EXCLUIR_FECHAS=         # Fechas a excluir: DD/MM/AAAA,DD/MM/AAAA
 ### Configuración de gitignore
 
 El archivo `.gitignore` ya excluye:
+
 - `.env` (credenciales)
 - `__pycache__/` (archivos compilados)
 - `/tmp/edus_captcha/` (imágenes temporales)
@@ -152,6 +153,19 @@ El archivo `.gitignore` ya excluye:
 ---
 
 ## 💻 Uso
+
+### Modo local en macOS (sin Telegram)
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install playwright pillow keyring
+.venv/bin/playwright install chromium
+
+.venv/bin/python edus_local.py --setup   # guarda cédula y clave en el Llavero de macOS
+.venv/bin/python edus_local.py           # busca hasta reservar (Ctrl+C para detener)
+```
+
+Cuando EDUS pide el código de seguridad, aparece una ventana con la imagen para que lo escribas. Al reservar, avisa con notificación y alerta. Mantiene la Mac despierta mientras corre (si cierras la tapa, se duerme igual).
 
 ### Modo manual
 
@@ -182,16 +196,16 @@ El bot permite manejar todo desde Telegram: registras tus datos una vez y luego 
 
 ### Comandos (aparecen en el menú de Telegram)
 
-| Comando | Descripción |
-|---------|-------------|
-| `/start` | Bienvenida e instrucciones |
-| `/registrar` | Configurar nombre, cédula y clave (se guardan cifradas) |
-| `/buscar` | Buscar una cita ahora mismo |
+| Comando      | Descripción                                                 |
+| ------------ | ----------------------------------------------------------- |
+| `/start`     | Bienvenida e instrucciones                                  |
+| `/registrar` | Configurar nombre, cédula y clave (se guardan cifradas)     |
+| `/buscar`    | Buscar una cita ahora mismo                                 |
 | `/programar` | Programar búsqueda automática (ej: `/programar 15/08/2026`) |
-| `/cancelar` | Cancelar todas las búsquedas programadas |
-| `/vision` | Configurar modelo de visión IA para el CAPTCHA |
-| `/estado` | Ver configuración y programaciones |
-| `/ayuda` | Ayuda rápida |
+| `/cancelar`  | Cancelar todas las búsquedas programadas                    |
+| `/vision`    | Configurar modelo de visión IA para el CAPTCHA              |
+| `/estado`    | Ver configuración y programaciones                          |
+| `/ayuda`     | Ayuda rápida                                                |
 
 ### Configuración del bot
 
@@ -278,6 +292,7 @@ docker compose up -d --build
 ```
 
 Esto levanta:
+
 - **`bot`** — el bot de Telegram (siempre activo)
 - **`cron`** — búsquedas automáticas: primera corrida a las **5:59 AM** y luego cada 5 min hasta las 8 AM (hora CR)
 
@@ -356,12 +371,12 @@ Automatizador-Citas-Edus/
 
 ### Cambiar especialidad
 
-| Código | Especialidad |
-|--------|-------------|
+| Código | Especialidad     |
+| ------ | ---------------- |
 | `1033` | Medicina General |
-| `1034` | Pediatría |
-| `1035` | Ginecología |
-| `1036` | Cardiología |
+| `1034` | Pediatría        |
+| `1035` | Ginecología      |
+| `1036` | Cardiología      |
 
 > **Nota**: los códigos pueden variar según la región/área de salud. Verifica los valores reales en el sistema EDUS.
 
