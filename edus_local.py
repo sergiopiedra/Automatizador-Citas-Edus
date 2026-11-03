@@ -16,6 +16,7 @@ import argparse
 import getpass
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -66,29 +67,50 @@ def notificar(titulo: str, mensaje: str) -> None:
     ], titulo, mensaje)
 
 
+class Alarma:
+    """Loops a loud sound at full system volume until the block exits, then restores the volume."""
+
+    def __enter__(self):
+        r = _osascript(["output volume of (get volume settings)"])
+        self.volumen = r.stdout.strip() if r.stdout.strip().isdigit() else ""
+        _osascript(["set volume output volume 100 without output muted"])
+        self.proc = subprocess.Popen(
+            ["/bin/sh", "-c", "while :; do afplay -v 2 /System/Library/Sounds/Sosumi.aiff; done"],
+            start_new_session=True)
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            os.killpg(self.proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        if self.volumen:
+            _osascript([f"set volume output volume {self.volumen}"])
+
+
 def alerta(titulo: str, mensaje: str) -> None:
-    subprocess.Popen(["afplay", "/System/Library/Sounds/Hero.aiff"])
-    _osascript([
-        "on run argv",
-        "display alert (item 1 of argv) message (item 2 of argv)",
-        "end run",
-    ], titulo, mensaje)
+    with Alarma():
+        _osascript([
+            "on run argv",
+            "display alert (item 1 of argv) message (item 2 of argv)",
+            "end run",
+        ], titulo, mensaje)
 
 
 def pedir_captcha(img: Path) -> str:
-    subprocess.Popen(["afplay", "/System/Library/Sounds/Glass.aiff"])
     visor = subprocess.Popen(["qlmanage", "-p", str(img)],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
-        r = _osascript([
-            "on run argv",
-            'set r to display dialog (item 1 of argv) default answer "" with title "EDUS Citas" '
-            "giving up after ((item 2 of argv) as integer)",
-            'if gave up of r then return ""',
-            "return text returned of r",
-            "end run",
-        ], "Escribe el código de seguridad que ves en la imagen:", str(CAPTCHA_TIMEOUT),
-            timeout=CAPTCHA_TIMEOUT + 15)
+        with Alarma():
+            r = _osascript([
+                "on run argv",
+                'set r to display dialog (item 1 of argv) default answer "" with title "EDUS Citas" '
+                "giving up after ((item 2 of argv) as integer)",
+                'if gave up of r then return ""',
+                "return text returned of r",
+                "end run",
+            ], "Escribe el código de seguridad que ves en la imagen:", str(CAPTCHA_TIMEOUT),
+                timeout=CAPTCHA_TIMEOUT + 15)
     except subprocess.TimeoutExpired:
         return ""
     finally:
