@@ -36,7 +36,7 @@ MAX_LOGIN = 5
 
 TAKEN_WORDS = ("asignada a otro", "no fue posible", "sin éxito")
 # EDUS refuses a new appointment if you already have one within the next 3 days.
-REFUSED_WORDS = ("próxim", "proxim", "ya tiene", "ya cuenta", "días", "dias")
+REFUSED_WORDS = ("ya posee cita",)
 CAPTCHA_WORDS = ("captcha", "código", "codigo", "imagen")
 CREDENTIAL_WORDS = ("clave", "contraseña", "credencial", "incorrect")
 
@@ -92,7 +92,7 @@ def alerta(titulo: str, mensaje: str) -> None:
     with Alarma():
         _osascript([
             "on run argv",
-            "display alert (item 1 of argv) message (item 2 of argv)",
+            "display alert (item 1 of argv) message (item 2 of argv) as critical",
             "end run",
         ], titulo, mensaje)
 
@@ -347,13 +347,16 @@ def reservar(page, cupo: dict, observar: bool = False) -> str:
             return false;
         }
     """
-    numero = ""
-    try:
-        texto = page.locator('[id="formSIAC:dlgCitasAsignar"]').inner_text(timeout=10000)
+    cita = {"n": ""}
+
+    def _numero() -> bool:
+        texto = page.locator('[id="formSIAC:dlgCitasAsignar"]').inner_text(timeout=2000)
         m = re.search(r"N°\s*de\s*Cita\s*(\d+)", texto)
-        numero = m.group(1) if m else ""
-    except Exception:
-        pass
+        cita["n"] = m.group(1) if m else ""
+        return bool(m)
+
+    esperar(_numero, 10)
+    numero = cita["n"]
     if not esperar(lambda: page.evaluate(confirmar), 10):
         page.screenshot(path=str(DATA_DIR / "sin_confirmar.png"), full_page=True)
         log("No apareció el botón 'Confirmar Cita'.")
