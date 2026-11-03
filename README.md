@@ -29,7 +29,7 @@ Para quienes madrugan a las 5 de la mañana, refrescan la página hasta el cansa
 - [Avisos](#avisos)
 - [Seguridad](#seguridad)
 - [Problemas comunes](#problemas-comunes)
-- [Créditos](#créditos)
+- [Aviso](#aviso)
 
 ## Qué hace
 
@@ -137,12 +137,17 @@ requirements.txt   playwright, pillow, keyring
 logo.svg           Logo (logo.png: versión 512 px)
 ```
 
-## Créditos
-
-Basado en [jeudytuanisapps/automatizacion-citas-edus-ccss](https://github.com/jeudytuanisapps/automatizacion-citas-edus-ccss) y [Xainner/Automatizador-Citas-Edus](https://github.com/Xainner/Automatizador-Citas-Edus).
+## Aviso
 
 Este proyecto **no está afiliado** con la Caja Costarricense de Seguro Social. Úsalo con responsabilidad: un cupo que reservas y no usas es un cupo que otra persona necesitaba.
 
 ## Licencia
 
 [MIT](LICENSE)
+
+---
+
+<p align="center">
+  Basado y modificado a partir del proyecto original de <a href="https://github.com/Xainner/Automatizador-Citas-Edus">Xainner/Automatizador-Citas-Edus</a>,<br>
+  que a su vez parte de <a href="https://github.com/jeudytuanisapps/automatizacion-citas-edus-ccss">jeudytuanisapps/automatizacion-citas-edus-ccss</a>.
+</p>
